@@ -1,20 +1,48 @@
 import World from './World';
 
+const hideClass = 'hidden';
+
 async function main() {
-  // Get a reference to the container element
   const container = document.querySelector('#container');
   if (!container) return;
 
-  // create a new world
   const world = new World(container);
-
-  // complete async tasks
   await world.init();
-
-  // start the animation loop
   world.start();
+
+  const startButton = document.getElementById('startButton');
+  const stopButton = document.getElementById('stopButton');
+  const overlay = document.getElementById('overlay');
+  const planeCount = document.getElementById('planeCount');
+  const starCount = document.getElementById('starCount');
+
+  if (planeCount !== null) {
+    planeCount.innerText = world.planeCount.toString();
+  }
+
+  if (starCount !== null) {
+    starCount.innerText = world.starCount.toString();
+  }
+
+  if (!startButton || !overlay || !stopButton) {
+    return;
+  }
+
+  startButton.addEventListener('click', () => {
+    startButton.classList.add(hideClass);
+    overlay.classList.add(hideClass);
+    stopButton.classList.remove(hideClass);
+    world.setActive(true);
+  });
+
+  stopButton.addEventListener('click', () => {
+    stopButton.classList.add(hideClass);
+    startButton.classList.remove(hideClass);
+    overlay.classList.remove(hideClass);
+    world.setActive(false);
+  });
 }
 
 main().catch(err => {
-  console.error(err);
+  console.error('main -> ', err);
 });

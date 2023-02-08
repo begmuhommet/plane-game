@@ -16,24 +16,25 @@ class Loop {
     this.updatableObjects = [];
   }
 
-  start() {
-    this.renderer.setAnimationLoop(() => {
-      // tell every animated object to tick forward one frame
-      this.tick();
+  addUpdatableObject = (object: any) => {
+    this.updatableObjects.push(object);
+  };
 
-      // render a frame
-      this.renderer.render(this.scene, this.camera);
-    });
+  start() {
+    this.renderer.setAnimationLoop(() => this.update());
   }
 
   stop() {
     this.renderer.setAnimationLoop(null);
   }
 
-  tick() {
-    // only call the getDelta function once per frame!
-    const delta = clock.getDelta();
+  update() {
+    this.tick();
+    this.renderer.render(this.scene, this.camera);
+  }
 
+  tick() {
+    const delta = clock.getElapsedTime();
     for (const object of this.updatableObjects) {
       object.tick(delta);
     }

@@ -1,54 +1,94 @@
-import { Scene, WebGLRenderer } from 'three';
-import { createCamera } from '@/components/createCamera';
+import { Scene, Vector3, WebGLRenderer } from 'three';
 import { createRenderer } from '@/core/renderer';
 import { createScene } from '@/components/createScene';
 import { createLights } from '@/components/createLights';
 import Loop from '@/core/Loop';
-import { TCamera } from '@/core/types';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { createControls } from '@/core/controls';
 import Resizer from '@/core/Resizer';
+import CameraController from '@/components/CameraController';
+import settings from '@/data/settings';
+import Plane from '@/components/Plane';
+import Obstacles from '@/components/Obstacles';
 
 class World {
-  camera: TCamera;
-  renderer: WebGLRenderer;
-  scene: Scene;
-  loop: Loop;
-  controls: OrbitControls;
-  resizer: Resizer;
+  protected renderer: WebGLRenderer;
+  protected scene: Scene;
+  protected loop: Loop | null = null;
+
+  protected cameraController: CameraController | null = null;
+  protected resizer: Resizer | null = null;
+  protected plane: Plane;
+  protected container: Element;
+  obstacles: Obstacles;
+
+  protected loading = false;
+  protected active = false;
+
+  planeCount = 3;
+  starCount = 0;
 
   constructor(container: Element) {
-    this.camera = createCamera();
+    this.container = container;
     this.renderer = createRenderer();
     this.scene = createScene();
-    this.loop = new Loop(this.camera, this.scene, this.renderer);
-    this.controls = createControls(this.camera, this.renderer.domElement);
-
-    container.append(this.renderer.domElement);
-
-    const { ambientLight, mainLight } = createLights();
-    this.loop.updatableObjects.push(this.controls);
-    this.scene.add(ambientLight, mainLight);
-    this.resizer = new Resizer(container, this.camera, this.renderer);
+    this.plane = new Plane();
+    this.obstacles = new Obstacles(this.scene);
   }
 
   async init() {
-    // const { parrot, flamingo, stork } = await loadBirds();
-    // move the target to the center of the front bird
-    // controls.target.copy(parrot.position);
-    // scene.add(parrot, flamingo, stork);
+    this.setLoading(true);
+
+    await this.plane.loadModel();
+    this.scene.add(this.plane.scene);
+
+    await this.obstacles.loadStar();
+    await this.obstacles.loadBomb();
+
+    this.cameraController = new CameraController(75, settings.aspect, 0.1, 100, this.plane.scene.position);
+    this.scene.add(this.cameraController.controller);
+
+    this.cameraController.setControllerPosition();
+    this.cameraController.setCameraPosition(new Vector3(-4.37, 0, -4.57), new Vector3(0, 0, 6));
+
+    this.loop = new Loop(this.cameraController.camera, this.scene, this.renderer);
+
+    this.container.append(this.renderer.domElement);
+
+    const { ambientLight, mainLight } = createLights();
+    this.scene.add(ambientLight, mainLight);
+
+    this.resizer = new Resizer(this.container, this.cameraController.camera, this.renderer);
+
+    this.loop.addUpdatableObject(this.plane);
+    this.loop.addUpdatableObject(this.cameraController);
+    this.cameraController.setControllerPosition();
+    this.setLoading(false);
+  }
+
+  setLoading(value: boolean) {
+    this.loading = value;
+  }
+
+  setActive(value: boolean) {
+    this.active = value;
+    this.plane?.setIsGameActive(value);
   }
 
   render() {
-    this.renderer.render(this.scene, this.camera);
+    if (this.cameraController) {
+      this.renderer.render(this.scene, this.cameraController.camera);
+    }
   }
 
   start() {
-    this.loop.start();
+    if (this.loop) {
+      this.loop.start();
+    }
   }
 
   stop() {
-    this.loop.stop();
+    if (this.loop) {
+      this.loop.stop();
+    }
   }
 }
 

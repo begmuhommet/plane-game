@@ -2,13 +2,42 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel='stylesheet' href='./src/styles/main.css'>
+    <link rel="stylesheet" href="./src/styles/main.css" />
     <title>Plane game</title>
   </head>
   <body>
-    <div id="container" class='container'></div>
+    <div id="container" class="relative w-screen h-screen m-0 p-0 left-0 top-0">
+      <button
+        id="startButton"
+        class="absolute top-1/2 left-1/2 z-10 transform -translate-x-1/2 -translate-y-1/2 bg-amber-400 hover:bg-amber-500 rounded-xl px-5 py-3 active:scale-95 text-3xl font-bold z-20 transition-all"
+      >
+        Start
+      </button>
+
+      <button
+        id="stopButton"
+        class="absolute bottom-3 left-3 z-10 bg-red-600 hover:bg-red-500 rounded-xl px-5 py-3 active:scale-95 text-lg font-bold text-white"
+      >
+        Stop game
+      </button>
+
+      <div class="flex items-center absolute top-4 left-4">
+        <img src="/assets/plane-icon.png" alt="plane" />
+        <span id="planeCount" class="text-5xl font-bold"></span>
+      </div>
+
+      <div class="flex items-center absolute top-4 right-4">
+        <span id="starCount" class="text-5xl font-bold"></span>
+        <img src="/assets/star-icon.png" alt="star" />
+      </div>
+
+      <div
+        id="overlay"
+        class="fixed top-1/2 left-1/2 z-10 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 w-screen h-screen p-0 m-0 backdrop-blur opacity-80 z-10"
+      ></div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

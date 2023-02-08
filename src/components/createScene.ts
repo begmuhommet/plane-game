@@ -1,8 +1,11 @@
-import { Color, Scene } from 'three';
+import { CubeTextureLoader, Scene } from 'three';
 
 function createScene() {
   const scene = new Scene();
-  scene.background = new Color('skyblue');
+  scene.background = new CubeTextureLoader()
+    .setPath('/scene/')
+    .load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
+
   return scene;
 }
 

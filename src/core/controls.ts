@@ -3,13 +3,12 @@ import { TCamera } from '@/core/types';
 
 function createControls(camera: TCamera, canvas: HTMLCanvasElement) {
   const controls = new OrbitControls(camera, canvas);
-
   controls.enableDamping = true;
+  return { controls, tick: () => tick(controls) };
+}
 
-  // forward controls.update to our custom .tick method
-  (controls as any).tick = () => controls.update();
-
-  return controls;
+function tick(controls: OrbitControls) {
+  controls.update();
 }
 
 export { createControls };

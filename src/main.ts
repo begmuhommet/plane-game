@@ -1,4 +1,4 @@
-import World from './World';
+import { World } from './World';
 
 const hideClass = 'hidden';
 
@@ -16,13 +16,30 @@ async function main() {
   const planeCount = document.getElementById('planeCount');
   const starCount = document.getElementById('starCount');
 
-  if (planeCount !== null) {
-    planeCount.innerText = world.planeCount.toString();
+  if (!planeCount || !starCount) {
+    return;
   }
 
-  if (starCount !== null) {
-    starCount.innerText = world.starCount.toString();
-  }
+  planeCount.innerText = world.planeCount.toString();
+  starCount.innerText = world.starCount.toString();
+
+  world.addEventListener('score_inc', (data: any) => {
+    starCount.innerText = data.count.toString();
+  });
+
+  world.addEventListener('score_dec', (data: any) => {
+    if (data.count > 0) {
+      planeCount.innerText = data.count.toString();
+    } else {
+      stopButton?.click();
+      planeCount.innerText = '0';
+      setTimeout(() => {
+        world.resetScore();
+        planeCount.innerText = world.planeCount.toString();
+        starCount.innerText = world.starCount.toString();
+      }, 500);
+    }
+  });
 
   if (!startButton || !overlay || !stopButton) {
     return;

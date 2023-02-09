@@ -1,15 +1,18 @@
-import { Group, LoadingManager, Scene } from 'three';
+import { EventDispatcher, Group, LoadingManager, Object3D, Scene, Vector3 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { worldInstance } from '@/World';
 
-class Obstacles {
+class Obstacles extends EventDispatcher {
   star: Group | null = null;
   bomb: Group | null = null;
   obstacles: Group[] = [];
   loader: GLTFLoader;
   scene: Scene;
+  tmpPos = new Vector3();
   obstacleSpawn = { pos: 20, offset: 5 };
 
   constructor(scene: Scene) {
+    super();
     this.scene = scene;
     const loadingManager = new LoadingManager();
     this.loader = new GLTFLoader(loadingManager);
@@ -18,6 +21,7 @@ class Obstacles {
   async loadStar() {
     const model = await this.loader.loadAsync('/assets/star.glb');
     this.star = model.scene;
+    this.star.name = 'Star';
     if (this.bomb) {
       this.initialize();
     }
@@ -26,6 +30,7 @@ class Obstacles {
   async loadBomb() {
     const model = await this.loader.loadAsync('/assets/bomb.glb');
     this.bomb = model.scene;
+    this.bomb.name = 'Bomb';
     if (this.star) {
       this.initialize();
     }
@@ -57,7 +62,7 @@ class Obstacles {
     this.obstacles.push(obstacle);
     this.scene.add(obstacle);
 
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 3; i++) {
       const newObstacle = obstacle.clone();
       this.scene.add(newObstacle);
       this.obstacles.push(newObstacle);
@@ -78,6 +83,45 @@ class Obstacles {
     obstacle.children[0].rotation.y = Math.random() * Math.PI * 2;
     obstacle.userData.hit = false;
     obstacle.children.forEach(child => (child.visible = true));
+  }
+
+  tick() {
+    let collisionObstacle: Group;
+    const plane = worldInstance?.plane.scene;
+    if (!plane) {
+      return;
+    }
+    this.obstacles.forEach(obstacle => {
+      obstacle.children[0].rotateY(0.01);
+      const relPositionZ = obstacle.position.z - plane.position.z;
+      if (Math.abs(relPositionZ) < 2 && !obstacle.userData.hit) {
+        collisionObstacle = obstacle;
+      }
+      if (relPositionZ < -20) {
+        this.respawnObstacle(obstacle);
+      }
+    });
+
+    // @ts-ignore
+    if (collisionObstacle) {
+      collisionObstacle.children.some(child => {
+        child.getWorldPosition(this.tmpPos);
+        const dist = this.tmpPos.distanceToSquared(plane.position);
+        if (dist < 5) {
+          collisionObstacle.userData.hit = true;
+          this.hit(child);
+        }
+      });
+    }
+  }
+
+  hit(obj: Object3D) {
+    if (obj.name === 'Star') {
+      this.dispatchEvent({ type: 'inc_score' });
+    } else {
+      this.dispatchEvent({ type: 'dec_score' });
+    }
+    obj.visible = false;
   }
 }
 

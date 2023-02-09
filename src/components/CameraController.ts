@@ -19,7 +19,7 @@ class CameraController {
 
   setTargetPosition() {
     this.target.copy(this.target);
-    // this.target.z += 0.001;
+    this.target.z += 0.001;
   }
 
   setCameraPosition(position: Vector3, lookAt: Vector3) {

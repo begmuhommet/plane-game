@@ -1,4 +1,4 @@
-import { Scene, Vector3, WebGLRenderer } from 'three';
+import { EventDispatcher, Scene, Vector3, WebGLRenderer } from 'three';
 import { createRenderer } from '@/core/renderer';
 import { createScene } from '@/components/createScene';
 import { createLights } from '@/components/createLights';
@@ -9,29 +9,38 @@ import settings from '@/data/settings';
 import Plane from '@/components/Plane';
 import Obstacles from '@/components/Obstacles';
 
-class World {
-  protected renderer: WebGLRenderer;
-  protected scene: Scene;
-  protected loop: Loop | null = null;
+export let worldInstance: World | null = null;
 
-  protected cameraController: CameraController | null = null;
-  protected resizer: Resizer | null = null;
-  protected plane: Plane;
-  protected container: Element;
+export class World extends EventDispatcher {
+  renderer: WebGLRenderer;
+  scene: Scene;
+  loop: Loop | null = null;
+
+  cameraController: CameraController | null = null;
+  resizer: Resizer | null = null;
+  plane: Plane;
+  container: Element;
   obstacles: Obstacles;
 
-  protected loading = false;
-  protected active = false;
+  loading = false;
+  active = false;
 
   planeCount = 3;
   starCount = 0;
 
   constructor(container: Element) {
+    super();
+    if (worldInstance === null) {
+      worldInstance = this;
+    }
     this.container = container;
     this.renderer = createRenderer();
     this.scene = createScene();
     this.plane = new Plane();
     this.obstacles = new Obstacles(this.scene);
+
+    this.obstacles.addEventListener('inc_score', () => this.incScore());
+    this.obstacles.addEventListener('dec_score', () => this.decScore());
   }
 
   async init() {
@@ -60,8 +69,27 @@ class World {
 
     this.loop.addUpdatableObject(this.plane);
     this.loop.addUpdatableObject(this.cameraController);
+    this.loop.addUpdatableObject(this.obstacles);
     this.cameraController.setControllerPosition();
     this.setLoading(false);
+  }
+
+  incScore() {
+    this.starCount++;
+    this.dispatchEvent({ type: 'score_inc', count: this.starCount });
+  }
+
+  decScore() {
+    // if (this.planeCount > 1) {
+    //   this.planeCount--;
+    // } else {
+    //   this.setActive(false);
+    //   this.stop();
+    //   this.planeCount = 3;
+    //   this.starCount = 0;
+    // }
+    this.planeCount--;
+    this.dispatchEvent({ type: 'score_dec', count: this.planeCount });
   }
 
   setLoading(value: boolean) {
@@ -71,6 +99,11 @@ class World {
   setActive(value: boolean) {
     this.active = value;
     this.plane?.setIsGameActive(value);
+  }
+
+  resetScore() {
+    this.planeCount = 3;
+    this.starCount = 0;
   }
 
   render() {
@@ -91,5 +124,3 @@ class World {
     }
   }
 }
-
-export default World;
